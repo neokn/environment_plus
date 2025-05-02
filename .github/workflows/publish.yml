@@ -1,0 +1,20 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publish to pub.dev
+        uses: k-paxian/dart-package-publisher@v.1.6.2
+        with:
+          credentialJson: ${{ secrets.PUB_CREDENTIALS_JSON }}
+          skipTests: false
+          dryRunOnly: false
