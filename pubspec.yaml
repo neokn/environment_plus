@@ -4,6 +4,18 @@ version: 1.0.0
 homepage: https://github.com/neokn/environment_plus
 repository: https://github.com/neokn/environment_plus
 issue_tracker: https://github.com/neokn/environment_plus/issues
+publish_to: 'https://pub.dev'
+topics:
+  - flutter
+  - environment
+  - device-info
+  - connectivity
+  - battery
+  - location
+platforms:
+  android:
+  ios:
+documentation: https://pub.dev/documentation/environment_plus/latest/
 
 environment:
   sdk: ^3.7.2

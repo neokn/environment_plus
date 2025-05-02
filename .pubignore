@@ -1,0 +1,24 @@
+# Exclude macOS and IDE files
+.DS_Store
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Exclude build and tool directories
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Exclude pubspec.lock for packages
+/pubspec.lock
+
+# Exclude test outputs
+coverage/
+
+# Exclude example build outputs
+example/build/
+example/.dart_tool/
+example/.flutter-plugins
+example/.flutter-plugins-dependencies
