@@ -131,17 +131,22 @@ class Environment {
     return _singleton!;
   }
 
-  static Future<Environment> initFake({
+  @visibleForTesting
+  static Environment initFake({
     AppInfo? appInfo,
     DeviceInfo? deviceInfo,
     bool? isAndroid,
     bool? isIOS,
-  }) async {
+    Map<String, dynamic>? rawInfo,
+  }) {
     _singleton = Environment._(
       appInfo ?? AppInfo.empty(),
       deviceInfo ?? DeviceInfo.empty(),
       Slugid.nice().toString(),
-      <String, dynamic>{},
+      (rawInfo
+            ?..addAll(appInfo?.rawInfo ?? {})
+            ..addAll(deviceInfo?.rawInfo ?? {})) ??
+          <String, dynamic>{},
       isAndroid: isAndroid,
       isIOS: isIOS,
     );
