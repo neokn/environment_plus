@@ -13,6 +13,8 @@ abstract class SystemDirectories with _$SystemDirectories {
   static final Logger _logger = Logger('SystemDirectories');
   static final Directory emptyDirectory = Directory('');
 
+  const SystemDirectories._();
+
   factory SystemDirectories() {
     if (_singleton == null) {
       throw "Please run `await SystemDirectories.init()` first";
@@ -28,7 +30,7 @@ abstract class SystemDirectories with _$SystemDirectories {
     Directory? applicationCacheDirectory,
     Directory? downloadsDirectory,
   }) =>
-      _singleton ??= SystemDirectories._(
+      _singleton ??= SystemDirectories._freezed(
         temporaryDirectory: temporaryDirectory ?? emptyDirectory,
         applicationSupportDirectory:
             applicationSupportDirectory ?? emptyDirectory,
@@ -38,7 +40,7 @@ abstract class SystemDirectories with _$SystemDirectories {
         downloadsDirectory: downloadsDirectory,
       );
 
-  const factory SystemDirectories._({
+  const factory SystemDirectories._freezed({
     @DirectoryConverter() required Directory temporaryDirectory,
     @DirectoryConverter() required Directory applicationSupportDirectory,
     @DirectoryConverter() required Directory applicationDocumentsDirectory,
@@ -72,7 +74,7 @@ abstract class SystemDirectories with _$SystemDirectories {
         return null;
       }),
     ]);
-    _singleton = SystemDirectories._(
+    _singleton = SystemDirectories._freezed(
       temporaryDirectory: results[0] as Directory,
       applicationSupportDirectory: results[1] as Directory,
       applicationDocumentsDirectory: results[2] as Directory,

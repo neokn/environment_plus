@@ -44,7 +44,9 @@ abstract class Environment with _$Environment {
   static late List<ConnectivityResult> _connection;
   static late BatteryState _batteryState;
   static Position? _position;
-  // region: Singleton instance getter
+
+  const Environment._();
+
   factory Environment() {
     if (_singleton == null) {
       throw "Please run `await Environment.init()` or `await Environment.initFake()` for testing first";
@@ -63,7 +65,7 @@ abstract class Environment with _$Environment {
     bool isIOS = false,
     String? flavor,
   }) =>
-      _singleton ??= Environment._(
+      _singleton ??= Environment._freezed(
         // ignore: invalid_use_of_visible_for_testing_member
         appInfo: appInfo ?? AppInfo.initFake(),
         // ignore: invalid_use_of_visible_for_testing_member
@@ -77,7 +79,7 @@ abstract class Environment with _$Environment {
         flavor: flavor,
       );
 
-  const factory Environment._({
+  const factory Environment._freezed({
     required AppInfo appInfo,
     required DeviceInfo deviceInfo,
     required Map<String, dynamic> rawInfo,
@@ -127,7 +129,7 @@ abstract class Environment with _$Environment {
     _batteryState = results[4] as BatteryState;
     _position = results[5] as Position?;
 
-    _singleton = Environment._(
+    _singleton = Environment._freezed(
       appInfo: appInfo,
       deviceInfo: deviceInfo,
       session: Slugid.nice().toString(),
