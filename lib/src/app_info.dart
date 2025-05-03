@@ -1,51 +1,41 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:package_info_plus/package_info_plus.dart' show PackageInfo;
 
-class AppInfo {
-  /// Name of the application
-  final String appName;
+part 'app_info.freezed.dart';
+part 'app_info.g.dart';
 
-  /// Application identifier (package name)
-  final String appId;
+@freezed
+abstract class AppInfo with _$AppInfo {
+  static AppInfo? _singleton;
 
-  /// Application version name
-  final String buildName;
-
-  /// Application version code
-  final String buildNumber;
-
-  /// Raw application data
-  final Map<String, dynamic> rawInfo;
-
-  static AppInfo? _instance;
-
-  /// Creates a new AppInfo instance
-  AppInfo._({
-    required this.appName,
-    required this.appId,
-    required this.buildName,
-    required this.buildNumber,
-    required this.rawInfo,
-  });
-
-  factory AppInfo.fromPlatform() {
-    if (_instance == null) {
-      throw "Please run `await AppInfo.init()` first";
+  factory AppInfo() {
+    if (_singleton != null) {
+      return _singleton!;
     }
-    return _instance!;
+    throw "Please run `await AppInfo.init()` first";
   }
 
+  const factory AppInfo._({
+    required String appName,
+    required String appId,
+    required String buildName,
+    required String buildNumber,
+    required Map<String, dynamic> rawInfo,
+  }) = _AppInfo;
+
   static Future<AppInfo> init() async {
-    if (_instance != null) {
-      return _instance!;
+    if (_singleton != null) {
+      return _singleton!;
     }
     final packageInfo = await PackageInfo.fromPlatform();
-    return AppInfo._(
+    _singleton = AppInfo._(
       appName: packageInfo.appName,
       appId: packageInfo.packageName,
       buildName: packageInfo.version,
       buildNumber: packageInfo.buildNumber,
       rawInfo: _readPackageInfoData(packageInfo),
     );
+    return _singleton!;
   }
 
   static Map<String, dynamic> _readPackageInfoData(PackageInfo info) {
@@ -57,28 +47,6 @@ class AppInfo {
     };
   }
 
-  /// Creates an AppInfo with default values
-  AppInfo.empty()
-    : appName = '',
-      appId = '',
-      buildName = '',
-      buildNumber = '',
-      rawInfo = const <String, dynamic>{};
-
-  /// Creates a copy of this AppInfo with the given fields replaced
-  AppInfo copyWith({
-    String? appName,
-    String? appId,
-    String? buildName,
-    String? buildNumber,
-    Map<String, dynamic>? rawInfo,
-  }) {
-    return AppInfo._(
-      appName: appName ?? this.appName,
-      appId: appId ?? this.appId,
-      buildName: buildName ?? this.buildName,
-      buildNumber: buildNumber ?? this.buildNumber,
-      rawInfo: rawInfo ?? this.rawInfo,
-    );
-  }
+  factory AppInfo.fromJson(Map<String, Object?> json) =>
+      _$AppInfoFromJson(json);
 }

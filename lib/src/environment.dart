@@ -1,49 +1,42 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'dart:async';
 
+import 'package:battery_plus/battery_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:logging/logging.dart' show Logger;
-import 'package:slugid/slugid.dart';
 import 'package:manifest_info_reader/manifest_info_reader.dart'
     show ManifestInfoReader;
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:battery_plus/battery_plus.dart';
+import 'package:slugid/slugid.dart';
 
 import 'app_info.dart';
 import 'device_info.dart';
+import 'system_directories.dart';
 
-class Environment {
-  final AppInfo appInfo;
+part 'environment.freezed.dart';
+part 'environment.g.dart';
 
-  final DeviceInfo deviceInfo;
+@freezed
+abstract class Environment with _$Environment {
+  static BatteryState get batteryState => _batteryState;
 
-  final Map<String, dynamic> rawInfo;
-
-  final bool isAndroid;
-
-  final bool isIOS;
-
-  final String session;
-
-  String? get flavor => rawInfo['manifest.info.flavor'] as String?;
-
-  BatteryState get batteryState => _batteryState;
-
-  Position? get position {
+  static Position? get position {
     if (_position == null) {
       _logger.warning('Position is null maybe permission is denied');
     }
     return _position;
   }
 
-  List<ConnectivityResult> get connection => _connection;
+  static List<ConnectivityResult> get connection => _connection;
 
   static final Logger _logger = Logger('Environment');
   static final Map<String, dynamic> _rawInfo = <String, dynamic>{};
   static Environment? _singleton;
+
   // Cache a single Connectivity instance to avoid memory issues.
   static final Connectivity _connectivity = Connectivity();
   static final Battery _battery = Battery();
@@ -52,6 +45,7 @@ class Environment {
   static late BatteryState _batteryState;
   static Position? _position;
 
+  const Environment._();
   // region: Singleton instance getter
   factory Environment() {
     if (_singleton == null) {
@@ -59,18 +53,17 @@ class Environment {
     }
     return _singleton!;
   }
-  // endregion
 
-  Environment._(
-    this.appInfo,
-    this.deviceInfo,
-    this.session,
-    Map<String, dynamic> rawInfo, {
-    bool? isAndroid,
-    bool? isIOS,
-  }) : rawInfo = Map.unmodifiable(rawInfo),
-       isAndroid = isAndroid ?? Platform.isAndroid,
-       isIOS = isIOS ?? Platform.isIOS;
+  const factory Environment._freezed({
+    required AppInfo appInfo,
+    required DeviceInfo deviceInfo,
+    required Map<String, dynamic> rawInfo,
+    required String session,
+    required SystemDirectories systemDirectories,
+    required bool isAndroid,
+    required bool isIOS,
+    required String? flavor,
+  }) = _Environment;
 
   static Future<Environment> init() async {
     if (_singleton != null) {
@@ -96,10 +89,12 @@ class Environment {
                 ? Geolocator.getCurrentPosition()
                 : Future.value(null),
       ),
+      SystemDirectories.init(),
     ]);
 
     var appInfo = results[0] as AppInfo;
     var deviceInfo = results[1] as DeviceInfo;
+    var systemDirectories = results[6] as SystemDirectories;
 
     _rawInfo.addAll(appInfo.rawInfo);
     _rawInfo.addAll(deviceInfo.rawInfo);
@@ -109,11 +104,15 @@ class Environment {
     _batteryState = results[4] as BatteryState;
     _position = results[5] as Position?;
 
-    _singleton = Environment._(
-      appInfo,
-      deviceInfo,
-      Slugid.nice().toString(),
-      _rawInfo,
+    _singleton = Environment._freezed(
+      appInfo: appInfo,
+      deviceInfo: deviceInfo,
+      session: Slugid.nice().toString(),
+      rawInfo: _rawInfo,
+      systemDirectories: systemDirectories,
+      isAndroid: Platform.isAndroid,
+      isIOS: Platform.isIOS,
+      flavor: _rawInfo['manifest.info.flavor'] as String?,
     );
 
     _battery.onBatteryStateChanged.listen((state) async {
@@ -131,49 +130,29 @@ class Environment {
     return _singleton!;
   }
 
-  @visibleForTesting
-  static Environment initFake({
-    AppInfo? appInfo,
-    DeviceInfo? deviceInfo,
-    bool? isAndroid,
-    bool? isIOS,
-    Map<String, dynamic>? rawInfo,
-  }) {
-    _singleton = Environment._(
-      appInfo ?? AppInfo.empty(),
-      deviceInfo ?? DeviceInfo.empty(),
-      Slugid.nice().toString(),
-      (rawInfo
-            ?..addAll(appInfo?.rawInfo ?? {})
-            ..addAll(deviceInfo?.rawInfo ?? {})) ??
-          <String, dynamic>{},
-      isAndroid: isAndroid,
-      isIOS: isIOS,
-    );
-
-    return _singleton!;
-  }
-
   static const double _nativeAndroidStatusBarHeight = 24;
 
-  double get _platformStatusBarPadding =>
-      isAndroid ? (statusBarHeight - _nativeAndroidStatusBarHeight) / 2 : 0.0;
+  static double get _platformStatusBarPadding =>
+      Platform.isAndroid
+          ? (statusBarHeight - _nativeAndroidStatusBarHeight) / 2
+          : 0.0;
 
-  bool get isReleaseMode => kReleaseMode;
+  static bool get isReleaseMode => kReleaseMode;
 
-  bool get isDebugMode => !isReleaseMode;
+  static bool get isDebugMode => !isReleaseMode || kDebugMode;
 
-  bool get isInTestingEnv => Platform.environment.containsKey('FLUTTER_TEST');
+  static bool get isInTestingEnv =>
+      Platform.environment.containsKey('FLUTTER_TEST');
 
-  double get statusBarHeight =>
+  static double get statusBarHeight =>
       ui.PlatformDispatcher.instance.views.first.padding.top /
       ui.PlatformDispatcher.instance.views.first.devicePixelRatio;
 
-  double get navigationBarHeight =>
+  static double get navigationBarHeight =>
       ui.PlatformDispatcher.instance.views.first.padding.bottom /
       ui.PlatformDispatcher.instance.views.first.devicePixelRatio;
 
-  double get appBarHeight => kToolbarHeight - _platformStatusBarPadding;
+  static double get appBarHeight => kToolbarHeight - _platformStatusBarPadding;
 
   /// Listen to connectivity changes as a stream using connectivity_plus.
   ///
@@ -224,4 +203,7 @@ class Environment {
   Stream<BatteryState> onBatteryStateChanged() {
     return _battery.onBatteryStateChanged;
   }
+
+  factory Environment.fromJson(Map<String, Object?> json) =>
+      _$EnvironmentFromJson(json);
 }

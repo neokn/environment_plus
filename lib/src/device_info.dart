@@ -3,60 +3,40 @@ import 'dart:io';
 import 'package:android_id/android_id.dart' show AndroidId;
 import 'package:device_info_plus/device_info_plus.dart'
     show AndroidDeviceInfo, DeviceInfoPlugin, IosDeviceInfo;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class DeviceInfo {
-  /// Brand of the device manufacturer
-  final String brand;
+part 'device_info.freezed.dart';
+part 'device_info.g.dart';
 
-  /// Unique identifier for the device
-  final String? deviceId;
+@freezed
+abstract class DeviceInfo with _$DeviceInfo {
+  static DeviceInfo? _singleton;
 
-  /// Whether the device is physical (not an emulator)
-  final bool isPhysicalDevice;
-
-  /// Model name of the device
-  final String machineModel;
-
-  /// Operating system version name
-  final String osVersionName;
-
-  /// Operating system version as an integer
-  final int osVersionNumber;
-
-  /// Whether the device supports 64-bit architecture
-  final bool support64bit;
-
-  /// Whether the device supports 32-bit architecture
-  final bool support32bit;
-
-  /// Raw data from device info
-  final Map<String, dynamic> rawInfo;
-
-  static DeviceInfo? _instance;
-
-  /// Creates a new DeviceInfo instance
-  DeviceInfo._({
-    required this.brand,
-    required this.isPhysicalDevice,
-    required this.machineModel,
-    required this.osVersionName,
-    required this.osVersionNumber,
-    required this.support64bit,
-    required this.support32bit,
-    required this.rawInfo,
-    this.deviceId,
-  });
-
-  factory DeviceInfo.fromPlatform() {
-    if (_instance == null) {
-      throw "Please run `await DeviceInfo.init()` first";
+  factory DeviceInfo() {
+    if (_singleton != null) {
+      return _singleton!;
     }
-    return _instance!;
+    throw "Please run `await AppInfo.init()` first";
   }
 
+  const factory DeviceInfo._({
+    required String brand,
+    required String? deviceId,
+    required bool isPhysicalDevice,
+    required String machineModel,
+    required String osVersionName,
+    required int osVersionNumber,
+    required bool support64bit,
+    required bool support32bit,
+    required Map<String, dynamic> rawInfo,
+  }) = _DeviceInfo;
+
   static Future<DeviceInfo> init() async {
-    if (_instance != null) {
-      return _instance!;
+    if (_singleton != null) {
+      return _singleton!;
+    }
+    if (_singleton != null) {
+      return _singleton!;
     }
     final deviceInfoPlugin = DeviceInfoPlugin();
     if (Platform.isAndroid) {
@@ -69,7 +49,7 @@ class DeviceInfo {
       final rawInfo = _readAndroidDeviceInfoData(androidDeviceInfo);
       rawInfo.addAll(<String, dynamic>{'AndroidId.id': androidId});
 
-      return DeviceInfo._(
+      _singleton = DeviceInfo._(
         brand: androidDeviceInfo.brand,
         deviceId: androidId,
         isPhysicalDevice: androidDeviceInfo.isPhysicalDevice,
@@ -83,7 +63,7 @@ class DeviceInfo {
     }
     if (Platform.isIOS) {
       final info = await deviceInfoPlugin.iosInfo;
-      return DeviceInfo._(
+      _singleton = DeviceInfo._(
         brand: 'apple',
         deviceId: info.identifierForVendor,
         isPhysicalDevice: info.isPhysicalDevice,
@@ -95,7 +75,7 @@ class DeviceInfo {
         rawInfo: _readIosDeviceInfoData(info),
       );
     }
-    return DeviceInfo.empty();
+    return _singleton!;
   }
 
   static Map<String, dynamic> _readAndroidDeviceInfoData(
@@ -148,40 +128,6 @@ class DeviceInfo {
     };
   }
 
-  /// Creates a DeviceInfo with default values
-  DeviceInfo.empty()
-    : brand = '',
-      deviceId = null,
-      isPhysicalDevice = false,
-      machineModel = '',
-      osVersionName = '',
-      osVersionNumber = 0,
-      support64bit = false,
-      support32bit = false,
-      rawInfo = const <String, dynamic>{};
-
-  /// Creates a copy of this DeviceInfo with the given fields replaced
-  DeviceInfo copyWith({
-    String? brand,
-    String? deviceId,
-    bool? isPhysicalDevice,
-    String? machineModel,
-    String? osVersionName,
-    int? osVersionNumber,
-    bool? support64bit,
-    bool? support32bit,
-    Map<String, dynamic>? rawInfo,
-  }) {
-    return DeviceInfo._(
-      brand: brand ?? this.brand,
-      deviceId: deviceId ?? this.deviceId,
-      isPhysicalDevice: isPhysicalDevice ?? this.isPhysicalDevice,
-      machineModel: machineModel ?? this.machineModel,
-      osVersionName: osVersionName ?? this.osVersionName,
-      osVersionNumber: osVersionNumber ?? this.osVersionNumber,
-      support64bit: support64bit ?? this.support64bit,
-      support32bit: support32bit ?? this.support32bit,
-      rawInfo: rawInfo ?? this.rawInfo,
-    );
-  }
+  factory DeviceInfo.fromJson(Map<String, Object?> json) =>
+      _$DeviceInfoFromJson(json);
 }
