@@ -11,8 +11,7 @@ part 'system_directories.g.dart';
 abstract class SystemDirectories with _$SystemDirectories {
   static SystemDirectories? _singleton;
   static final Logger _logger = Logger('SystemDirectories');
-
-  const SystemDirectories._();
+  static final Directory emptyDirectory = Directory('');
 
   factory SystemDirectories() {
     if (_singleton == null) {
@@ -21,7 +20,25 @@ abstract class SystemDirectories with _$SystemDirectories {
     return _singleton!;
   }
 
-  const factory SystemDirectories._freezed({
+  @visibleForTesting
+  factory SystemDirectories.initFake({
+    Directory? temporaryDirectory,
+    Directory? applicationSupportDirectory,
+    Directory? applicationDocumentsDirectory,
+    Directory? applicationCacheDirectory,
+    Directory? downloadsDirectory,
+  }) =>
+      _singleton = SystemDirectories._(
+        temporaryDirectory: temporaryDirectory ?? emptyDirectory,
+        applicationSupportDirectory:
+            applicationSupportDirectory ?? emptyDirectory,
+        applicationDocumentsDirectory:
+            applicationDocumentsDirectory ?? emptyDirectory,
+        applicationCacheDirectory: applicationCacheDirectory ?? emptyDirectory,
+        downloadsDirectory: downloadsDirectory,
+      );
+
+  const factory SystemDirectories._({
     @DirectoryConverter() required Directory temporaryDirectory,
     @DirectoryConverter() required Directory applicationSupportDirectory,
     @DirectoryConverter() required Directory applicationDocumentsDirectory,
@@ -55,7 +72,7 @@ abstract class SystemDirectories with _$SystemDirectories {
         return null;
       }),
     ]);
-    _singleton = SystemDirectories._freezed(
+    _singleton = SystemDirectories._(
       temporaryDirectory: results[0] as Directory,
       applicationSupportDirectory: results[1] as Directory,
       applicationDocumentsDirectory: results[2] as Directory,

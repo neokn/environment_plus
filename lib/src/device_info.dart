@@ -19,6 +19,29 @@ abstract class DeviceInfo with _$DeviceInfo {
     throw "Please run `await AppInfo.init()` first";
   }
 
+  @visibleForTesting
+  factory DeviceInfo.initFake({
+    String brand = '',
+    String? deviceId = '',
+    bool isPhysicalDevice = false,
+    String machineModel = '',
+    String osVersionName = '',
+    int osVersionNumber = 0,
+    bool support64bit = false,
+    bool support32bit = false,
+    Map<String, dynamic> rawInfo = const {},
+  }) => _singleton = DeviceInfo._(
+    brand: brand,
+    deviceId: deviceId,
+    isPhysicalDevice: isPhysicalDevice,
+    machineModel: machineModel,
+    osVersionName: osVersionName,
+    osVersionNumber: osVersionNumber,
+    support64bit: support64bit,
+    support32bit: support32bit,
+    rawInfo: rawInfo,
+  );
+
   const factory DeviceInfo._({
     required String brand,
     required String? deviceId,

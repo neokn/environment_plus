@@ -15,6 +15,21 @@ abstract class AppInfo with _$AppInfo {
     throw "Please run `await AppInfo.init()` first";
   }
 
+  @visibleForTesting
+  factory AppInfo.initFake({
+    String appName = '',
+    String appId = '',
+    String buildName = '',
+    String buildNumber = '',
+    Map<String, dynamic> rawInfo = const {},
+  }) => _singleton = AppInfo._(
+    appName: appName,
+    appId: appId,
+    buildName: buildName,
+    buildNumber: buildNumber,
+    rawInfo: rawInfo,
+  );
+
   const factory AppInfo._({
     required String appName,
     required String appId,
