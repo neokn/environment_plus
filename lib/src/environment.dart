@@ -46,6 +46,7 @@ abstract class Environment with _$Environment {
   static Position? _position;
 
   static String session = Slugid.nice().toString();
+
   String? get flavor => rawInfo['manifest.info.flavor'] as String?;
 
   const Environment._();
@@ -119,10 +120,14 @@ abstract class Environment with _$Environment {
       _battery.batteryState,
       Geolocator.checkPermission().then(
         (permission) =>
-            permission != LocationPermission.denied &&
-                    permission != LocationPermission.deniedForever &&
-                    permission != LocationPermission.unableToDetermine
-                ? Geolocator.getCurrentPosition()
+            permission == LocationPermission.always ||
+                    permission == LocationPermission.whileInUse
+                ? Geolocator.isLocationServiceEnabled().then(
+                  (isEnabled) =>
+                      isEnabled
+                          ? Geolocator.getCurrentPosition()
+                          : Geolocator.getLastKnownPosition(),
+                )
                 : Future.value(null),
       ),
       SystemDirectories.init(),
@@ -140,7 +145,7 @@ abstract class Environment with _$Environment {
     _batteryState = results[4] as BatteryState;
     _position = results[5] as Position?;
 
-    _singleton = Environment._freezed(
+    final env = Environment._freezed(
       appInfo: appInfo,
       deviceInfo: deviceInfo,
       rawInfo: Map.unmodifiable(_rawInfo),
@@ -149,17 +154,20 @@ abstract class Environment with _$Environment {
       isIOS: Platform.isIOS,
     );
 
-    _battery.onBatteryStateChanged.listen((state) async {
-      _batteryState = state;
-    });
+    env.onBatteryStateChanged().listen((state) => _batteryState = state);
 
-    _connectivity.onConnectivityChanged.listen((result) {
-      _connection = result;
-    });
+    env.onConnectivityChanged().listen((results) => _connection = results);
 
-    Geolocator.getPositionStream().listen((pos) {
-      _position = pos;
-    });
+    unawaited(
+      Geolocator.checkPermission().then((permission) {
+        if (permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse) {
+          env.onPositionChanged().listen((position) => _position = position);
+        }
+      }),
+    );
+
+    _singleton = env;
 
     return _singleton!;
   }
@@ -196,32 +204,39 @@ abstract class Environment with _$Environment {
     return _connectivity.onConnectivityChanged;
   }
 
-  /// region: Internal helper to check and request location permission.
-  /// Throws [PermissionDeniedException] if permission is denied.
-  static Future<void> _ensureLocationPermission() async {
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw PermissionDeniedException('Location permission denied');
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      throw PermissionDeniedException('Location permission permanently denied');
-    }
-  }
-
   /// Listen to the device's position changes as a stream using geolocator.
   ///
   /// Example usage:
   ///   Environment.instance.onPositionChanged().listen((Position position) { ... });
-  Stream<Position> onPositionChanged({
-    LocationAccuracy accuracy = LocationAccuracy.high,
-  }) async* {
-    await _ensureLocationPermission();
-    yield* Geolocator.getPositionStream(
-      locationSettings: LocationSettings(accuracy: accuracy),
-    );
+  Stream<Position> onPositionChanged({LocationAccuracy? accuracy}) async* {
+    yield* await Geolocator.checkPermission().then((permission) {
+      final locationSettings =
+          accuracy == null ? null : LocationSettings(accuracy: accuracy);
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
+        return Geolocator.requestPermission().then((permission) {
+          if (permission == LocationPermission.unableToDetermine) {
+            throw PermissionDeniedException(
+              'Location permission unable to determine',
+            );
+          }
+          if (permission == LocationPermission.denied) {
+            throw PermissionDeniedException('Location permission denied');
+          }
+          if (permission == LocationPermission.deniedForever) {
+            throw PermissionDeniedException(
+              'Location permission permanently denied',
+            );
+          }
+          final positionStream = Geolocator.getPositionStream(
+            locationSettings: locationSettings,
+          );
+          positionStream.listen((position) => _position = position);
+          return positionStream;
+        });
+      }
+      return Geolocator.getPositionStream(locationSettings: locationSettings);
+    });
   }
 
   /// Get the current battery level as a percentage (0-100).
@@ -229,6 +244,10 @@ abstract class Environment with _$Environment {
   ///   final level = await Environment.instance.getBatteryLevel();
   Future<int> getBatteryLevel() async {
     return await _battery.batteryLevel;
+  }
+
+  Future<bool> isInBatterySaveMode() async {
+    return await _battery.isInBatterySaveMode;
   }
 
   /// Listen to battery state changes (charging, discharging, full, unknown).
