@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:environment_plus/environment_plus.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +63,34 @@ class _MyAppState extends State<MyApp> {
         _batteryLevel = level;
       });
     });
+
+    // 初始化 system directories
+    _initSystemDirectories();
+  }
+
+  void _initSystemDirectories() {
+    final directories = widget.environment.systemDirectories;
+    // 創建臨時文件
+    final tempFile = directories.getTemporaryFile('temp.txt');
+    tempFile.writeAsStringSync('This is a temporary file');
+
+    // 創建應用支持文件
+    final supportFile = directories.getApplicationSupportFile('support.txt');
+    supportFile.writeAsStringSync('This is a support file');
+
+    // 創建應用文檔文件
+    final docFile = directories.getApplicationDocumentsFile('document.txt');
+    docFile.writeAsStringSync('This is a document file');
+
+    // 創建應用緩存文件
+    final cacheFile = directories.getApplicationCacheFile('cache.txt');
+    cacheFile.writeAsStringSync('This is a cache file');
+
+    // 創建下載文件（如果可用）
+    final downloadFile = directories.getDownloadsFile('download.txt');
+    if (downloadFile != null) {
+      downloadFile.writeAsStringSync('This is a download file');
+    }
   }
 
   @override
@@ -87,7 +116,7 @@ class _MyAppState extends State<MyApp> {
               Text('OS Version: ${env.deviceInfo.osVersionName}'),
               Text('App Name: ${env.appInfo.appName}'),
               Text('Version: ${env.appInfo.buildName}'),
-              Text('Is Debug Mode: ${env.isDebugMode}'),
+              Text('Is Debug Mode: ${Environment.isDebugMode}'),
               Text('Is Physical Device: ${env.deviceInfo.isPhysicalDevice}'),
               Text('Flavor: ${env.flavor ?? 'unknown'}'),
               const Divider(),
@@ -103,6 +132,24 @@ class _MyAppState extends State<MyApp> {
               const Divider(),
               Text('Battery Level: ${_batteryLevel?.toString() ?? 'Unknown'}%'),
               Text('Battery State: ${_batteryState?.toString() ?? 'Unknown'}'),
+              const Divider(),
+              const Text('System Directories:'),
+              Text(
+                'Temporary Directory: ${env.systemDirectories.temporaryDirectory.path}',
+              ),
+              Text(
+                'Application Support Directory: ${env.systemDirectories.applicationSupportDirectory.path}',
+              ),
+              Text(
+                'Application Documents Directory: ${env.systemDirectories.applicationDocumentsDirectory.path}',
+              ),
+              Text(
+                'Application Cache Directory: ${env.systemDirectories.applicationCacheDirectory.path}',
+              ),
+              if (env.systemDirectories.downloadsDirectory != null)
+                Text(
+                  'Downloads Directory: ${env.systemDirectories.downloadsDirectory!.path}',
+                ),
             ],
           ),
         ),
