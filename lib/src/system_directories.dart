@@ -17,7 +17,7 @@ abstract class SystemDirectories with _$SystemDirectories {
 
   factory SystemDirectories() {
     if (_singleton == null) {
-      throw "Please run `await SystemDirectories.init()` first";
+      throw Exception("Please run `await SystemDirectories.init()` first");
     }
     return _singleton!;
   }

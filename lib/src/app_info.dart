@@ -9,10 +9,10 @@ abstract class AppInfo with _$AppInfo {
   static AppInfo? _singleton;
 
   factory AppInfo() {
-    if (_singleton != null) {
-      return _singleton!;
+    if (_singleton == null) {
+      throw Exception("Please run `await AppInfo.init()` first");
     }
-    throw "Please run `await AppInfo.init()` first";
+    return _singleton!;
   }
 
   @visibleForTesting

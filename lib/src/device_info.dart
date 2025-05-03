@@ -13,10 +13,10 @@ abstract class DeviceInfo with _$DeviceInfo {
   static DeviceInfo? _singleton;
 
   factory DeviceInfo() {
-    if (_singleton != null) {
-      return _singleton!;
+    if (_singleton == null) {
+      throw Exception("Please run `await DeviceInfo.init()` first");
     }
-    throw "Please run `await AppInfo.init()` first";
+    return _singleton!;
   }
 
   @visibleForTesting

@@ -45,11 +45,16 @@ abstract class Environment with _$Environment {
   static late BatteryState _batteryState;
   static Position? _position;
 
+  static String session = Slugid.nice().toString();
+  String? get flavor => rawInfo['manifest.info.flavor'] as String?;
+
   const Environment._();
 
   factory Environment() {
     if (_singleton == null) {
-      throw "Please run `await Environment.init()` or `await Environment.initFake()` for testing first";
+      throw Exception(
+        "Please run `await Environment.init()` or `await Environment.initFake()` for testing first",
+      );
     }
     return _singleton!;
   }
@@ -59,35 +64,41 @@ abstract class Environment with _$Environment {
     AppInfo? appInfo,
     DeviceInfo? deviceInfo,
     Map<String, dynamic> rawInfo = const {},
-    String session = "",
     SystemDirectories? systemDirectories,
     bool isAndroid = false,
     bool isIOS = false,
-    String? flavor,
-  }) =>
-      _singleton ??= Environment._freezed(
-        // ignore: invalid_use_of_visible_for_testing_member
-        appInfo: appInfo ?? AppInfo.initFake(),
-        // ignore: invalid_use_of_visible_for_testing_member
-        deviceInfo: deviceInfo ?? DeviceInfo.initFake(),
-        rawInfo: rawInfo,
-        session: session,
-        // ignore: invalid_use_of_visible_for_testing_member
-        systemDirectories: systemDirectories ?? SystemDirectories.initFake(),
-        isAndroid: isAndroid,
-        isIOS: isIOS,
-        flavor: flavor,
-      );
+    List<ConnectivityResult> connection = const [],
+    BatteryState batteryState = BatteryState.full,
+    Position? position,
+  }) {
+    if (_singleton != null) {
+      throw Exception('Environment is already initialized');
+    }
+
+    _connection = connection;
+    _batteryState = batteryState;
+    _position = position;
+
+    return _singleton ??= Environment._freezed(
+      // ignore: invalid_use_of_visible_for_testing_member
+      appInfo: appInfo ?? AppInfo.initFake(),
+      // ignore: invalid_use_of_visible_for_testing_member
+      deviceInfo: deviceInfo ?? DeviceInfo.initFake(),
+      rawInfo: rawInfo,
+      // ignore: invalid_use_of_visible_for_testing_member
+      systemDirectories: systemDirectories ?? SystemDirectories.initFake(),
+      isAndroid: isAndroid,
+      isIOS: isIOS,
+    );
+  }
 
   const factory Environment._freezed({
     required AppInfo appInfo,
     required DeviceInfo deviceInfo,
     required Map<String, dynamic> rawInfo,
-    required String session,
     required SystemDirectories systemDirectories,
     required bool isAndroid,
     required bool isIOS,
-    required String? flavor,
   }) = _Environment;
 
   static Future<Environment> init() async {
@@ -132,12 +143,10 @@ abstract class Environment with _$Environment {
     _singleton = Environment._freezed(
       appInfo: appInfo,
       deviceInfo: deviceInfo,
-      session: Slugid.nice().toString(),
-      rawInfo: _rawInfo,
+      rawInfo: Map.unmodifiable(_rawInfo),
       systemDirectories: systemDirectories,
       isAndroid: Platform.isAndroid,
       isIOS: Platform.isIOS,
-      flavor: _rawInfo['manifest.info.flavor'] as String?,
     );
 
     _battery.onBatteryStateChanged.listen((state) async {
