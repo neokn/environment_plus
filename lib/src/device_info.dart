@@ -30,17 +30,18 @@ abstract class DeviceInfo with _$DeviceInfo {
     bool support64bit = false,
     bool support32bit = false,
     Map<String, dynamic> rawInfo = const {},
-  }) => _singleton = DeviceInfo._(
-    brand: brand,
-    deviceId: deviceId,
-    isPhysicalDevice: isPhysicalDevice,
-    machineModel: machineModel,
-    osVersionName: osVersionName,
-    osVersionNumber: osVersionNumber,
-    support64bit: support64bit,
-    support32bit: support32bit,
-    rawInfo: rawInfo,
-  );
+  }) =>
+      _singleton ??= DeviceInfo._(
+        brand: brand,
+        deviceId: deviceId,
+        isPhysicalDevice: isPhysicalDevice,
+        machineModel: machineModel,
+        osVersionName: osVersionName,
+        osVersionNumber: osVersionNumber,
+        support64bit: support64bit,
+        support32bit: support32bit,
+        rawInfo: rawInfo,
+      );
 
   const factory DeviceInfo._({
     required String brand,
@@ -58,9 +59,7 @@ abstract class DeviceInfo with _$DeviceInfo {
     if (_singleton != null) {
       return _singleton!;
     }
-    if (_singleton != null) {
-      return _singleton!;
-    }
+
     final deviceInfoPlugin = DeviceInfoPlugin();
     if (Platform.isAndroid) {
       final info = await Future.wait([

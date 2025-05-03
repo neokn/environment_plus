@@ -22,13 +22,14 @@ abstract class AppInfo with _$AppInfo {
     String buildName = '',
     String buildNumber = '',
     Map<String, dynamic> rawInfo = const {},
-  }) => _singleton = AppInfo._(
-    appName: appName,
-    appId: appId,
-    buildName: buildName,
-    buildNumber: buildNumber,
-    rawInfo: rawInfo,
-  );
+  }) =>
+      _singleton ??= AppInfo._(
+        appName: appName,
+        appId: appId,
+        buildName: buildName,
+        buildNumber: buildNumber,
+        rawInfo: rawInfo,
+      );
 
   const factory AppInfo._({
     required String appName,

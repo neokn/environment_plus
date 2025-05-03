@@ -28,7 +28,7 @@ abstract class SystemDirectories with _$SystemDirectories {
     Directory? applicationCacheDirectory,
     Directory? downloadsDirectory,
   }) =>
-      _singleton = SystemDirectories._(
+      _singleton ??= SystemDirectories._(
         temporaryDirectory: temporaryDirectory ?? emptyDirectory,
         applicationSupportDirectory:
             applicationSupportDirectory ?? emptyDirectory,

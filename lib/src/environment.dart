@@ -63,7 +63,7 @@ abstract class Environment with _$Environment {
     bool isIOS = false,
     String? flavor,
   }) =>
-      _singleton = Environment._(
+      _singleton ??= Environment._(
         // ignore: invalid_use_of_visible_for_testing_member
         appInfo: appInfo ?? AppInfo.initFake(),
         // ignore: invalid_use_of_visible_for_testing_member
