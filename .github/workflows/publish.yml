@@ -12,14 +12,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-
-      - name: Run build_runner
-        run: dart run build_runner build --delete-conflicting-outputs
-
       - name: Publish to pub.dev
         uses: k-paxian/dart-package-publisher@v.1.6.2
+        run: dart run build_runner build --delete-conflicting-outputs
         with:
           credentialJson: ${{ secrets.PUB_CREDENTIALS_JSON }}
           skipTests: false
