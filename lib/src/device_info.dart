@@ -150,6 +150,6 @@ abstract class DeviceInfo with _$DeviceInfo {
     };
   }
 
-  factory DeviceInfo.fromJson(Map<String, Object?> json) =>
+  factory DeviceInfo.fromJson(Map<String, dynamic> json) =>
       _$DeviceInfoFromJson(json);
 }

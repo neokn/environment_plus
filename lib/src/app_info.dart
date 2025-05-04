@@ -63,6 +63,6 @@ abstract class AppInfo with _$AppInfo {
     };
   }
 
-  factory AppInfo.fromJson(Map<String, Object?> json) =>
+  factory AppInfo.fromJson(Map<String, dynamic> json) =>
       _$AppInfoFromJson(json);
 }

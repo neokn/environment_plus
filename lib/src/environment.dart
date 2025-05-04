@@ -257,6 +257,6 @@ abstract class Environment with _$Environment {
     return _battery.onBatteryStateChanged;
   }
 
-  factory Environment.fromJson(Map<String, Object?> json) =>
+  factory Environment.fromJson(Map<String, dynamic> json) =>
       _$EnvironmentFromJson(json);
 }

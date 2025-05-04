@@ -84,7 +84,7 @@ abstract class SystemDirectories with _$SystemDirectories {
     return _singleton!;
   }
 
-  factory SystemDirectories.fromJson(Map<String, Object?> json) =>
+  factory SystemDirectories.fromJson(Map<String, dynamic> json) =>
       _$SystemDirectoriesFromJson(json);
 }
 
