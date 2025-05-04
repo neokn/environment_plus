@@ -25,14 +25,9 @@ jobs:
         run: dart format --set-exit-if-changed .
       - name: build_runner
         run: dart run build_runner build --delete-conflicting-outputs
-
-      - name: Publish to pub.dev (Dry Run)
-        uses: k-paxian/dart-package-publisher@v.1.6.2
-        with:
-          credentialJson: ${{ secrets.PUB_CREDENTIALS_JSON }}
-          skipTests: false
-          dryRunOnly: true
-          suppressBuildRunner: true
+      - name: dry-run
+        run: flutter pub publish --dry-run
+      
 
   publish-release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -53,6 +48,11 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
       - name: build_runner
         run: dart run build_runner build --delete-conflicting-outputs
-      - name: dry-run
-        run: flutter pub publish --dry-run
+      
+      - name: Publish to pub.dev (Dry Run)
+        uses: k-paxian/dart-package-publisher@v.1.6.2
+        with:
+          credentialJson: ${{ secrets.PUB_CREDENTIALS_JSON }}
+          skipTests: false
+          dryRunOnly: false
         
