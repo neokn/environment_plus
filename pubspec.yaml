@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.0.2
   device_info_plus: ^11.4.0
   package_info_plus: ^8.3.0
   slugid: ^1.1.2
