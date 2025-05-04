@@ -1,6 +1,6 @@
 name: environment_plus
 description: "A Flutter plugin that provides comprehensive device, app, and environment information for Flutter apps."
-version: 1.0.0
+version: 1.1.0
 homepage: https://github.com/neokn/environment_plus
 
 environment:
