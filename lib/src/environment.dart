@@ -118,18 +118,23 @@ abstract class Environment with _$Environment {
       }),
       _connectivity.checkConnectivity(),
       _battery.batteryState,
-      Geolocator.checkPermission().then(
-        (permission) =>
-            permission == LocationPermission.always ||
-                    permission == LocationPermission.whileInUse
-                ? Geolocator.isLocationServiceEnabled().then(
-                  (isEnabled) =>
-                      isEnabled
-                          ? Geolocator.getCurrentPosition()
-                          : Geolocator.getLastKnownPosition(),
-                )
-                : Future.value(null),
-      ),
+      Geolocator.checkPermission()
+          .then(
+            (permission) =>
+                permission == LocationPermission.always ||
+                        permission == LocationPermission.whileInUse
+                    ? Geolocator.isLocationServiceEnabled().then(
+                      (isEnabled) =>
+                          isEnabled
+                              ? Geolocator.getCurrentPosition()
+                              : Geolocator.getLastKnownPosition(),
+                    )
+                    : Future.value(null),
+          )
+          .catchError((e, st) {
+            _logger.warning('Error getting position', e, st);
+            return Future.value(null);
+          }),
       SystemDirectories.init(),
     ]);
 
@@ -159,12 +164,19 @@ abstract class Environment with _$Environment {
     env.onConnectivityChanged().listen((results) => _connection = results);
 
     unawaited(
-      Geolocator.checkPermission().then((permission) {
-        if (permission == LocationPermission.always ||
-            permission == LocationPermission.whileInUse) {
-          env.onPositionChanged().listen((position) => _position = position);
-        }
-      }),
+      Geolocator.checkPermission()
+          .then((permission) {
+            if (permission == LocationPermission.always ||
+                permission == LocationPermission.whileInUse) {
+              env.onPositionChanged().listen(
+                (position) => _position = position,
+              );
+            }
+          })
+          .catchError((e, st) {
+            _logger.warning('Error getting position', e, st);
+            return Future.value(null);
+          }),
     );
 
     _singleton = env;
