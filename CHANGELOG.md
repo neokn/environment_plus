@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2025-05-04
+
+### Changed
+- Bumped version to 1.1.1
+- Updated example pubspec.lock
+
 ## [1.1.0] - 2024-03-19
 
 ### Added
