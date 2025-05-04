@@ -18,6 +18,7 @@ jobs:
       - name: Publish to pub.dev (Dry Run)
         uses: k-paxian/dart-package-publisher@v.1.6.2
         with:
+          credentialJson: ${{ secrets.PUB_CREDENTIALS_JSON }}
           skipTests: false
           dryRunOnly: true
           suppressBuildRunner: true
